@@ -32,7 +32,7 @@ The Embedded Network Setup Webpage was Made by JO3RI check http://www.jo3ri.be/a
 * 31 - Build Report on Custom Rely Links , Remove Relay and Input status on Web Page so that it uses less memory
 * 32 - Add json Building Sequince to send payload - add info to main webpage for all the links
 * 33 - Add Eathernet Check to network adaptor 
-* 34 - modify Web Interface
+* 
 */
 
 #include <SPI.h>
