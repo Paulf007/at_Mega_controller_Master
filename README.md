@@ -1,6 +1,8 @@
 # at_Mega_controller_Master
 Relay and Input Controller via MQTT
 
+DHT sensor is connected to PIN 5
+
 Start up from scratch :
     1. Default Ip for config is 192.168.8.2
     2. Got to http://192.168.0.2/setup and set the nessasary network settings press submit 

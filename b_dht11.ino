@@ -1,5 +1,5 @@
 void dht11 () {
-
+if (stop_publish == 0){
  unsigned long currentMillis = millis(); // grab current time
   // check if "interval" time has passed (1000 milliseconds)
  if ((unsigned long)(currentMillis - previousMillis) >= interval) {
@@ -7,6 +7,7 @@ void dht11 () {
   int chk = DHT.read11(DHT11_PIN);
   temp = DHT.temperature;
   hum = DHT.humidity;
+  show_tempR4 (temp,hum);// to OLED
   //Serial.print("Temperature = ");
  // Serial.println(DHT.temperature);
  // Serial.print("Humidity = ");
@@ -27,8 +28,8 @@ void dht11 () {
   String  payload1 = "{";
           payload1 += "\"Ver\":"; payload1 += ver; payload1 += ",";
           payload1 += "\"ip\":\""; payload1 += ipmq.c_str();  payload1 += "\",";
-          payload1 += "\"Overide\":"; payload1 += overide; payload1 += ",";
-          payload1 += "\"AnSw\":"; payload1 += analogSw; payload1 += ",";
+          payload1 += "\"Overide\":"; payload1 += customLink; payload1 += ",";
+          payload1 += "\"AnlInfo\":"; payload1 += analogSw; payload1 += ",";
           payload1 += "\"DHT11\":{"; 
           payload1 += "\"Temp\":"; 
           payload1 += DHT.temperature; 
@@ -46,8 +47,8 @@ void dht11 () {
  //Serial.print (F("MQTT Data Sent"));
  // Serial.println(freeMemory());
   previousMillis = millis();
- }
-  
+  }
+ }  
 }
 // Needs to be activated in setup
 void analog (){

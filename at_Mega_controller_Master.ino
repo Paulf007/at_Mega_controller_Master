@@ -26,14 +26,20 @@ The Embedded Network Setup Webpage was Made by JO3RI check http://www.jo3ri.be/a
 * 25 - add random client name to mqtt connect
 * 26 - add check to se if all input pins is linked to the internal memory 
 * 27 - change how the relay topic is parced
-* UNtested Code must stille be checked 
+* UNtested Code must stil be checked 
 * 29 - change format of relay topic
 * 30 - add test to check if relay topic is used or not
 * 31 - Build Report on Custom Rely Links , Remove Relay and Input status on Web Page so that it uses less memory
 * 32 - Add json Building Sequince to send payload - add info to main webpage for all the links
 * 33 - Add Eathernet Check to network adaptor 
+* 34 - change ON _ OFF Payload
+* 35 - add OLED to Board to report Switch Changes - for Conterle pannel Possible 
+* 36 -  add check to enable or disable OLED display so that if the oled is not active it will be discarded - not yet completed
+* 37 -  check if the MQTT command is for switching so that it could be ignored
+* 
 * 
 */
+
 
 #include <SPI.h>
 #include <Ethernet.h>
@@ -44,7 +50,21 @@ The Embedded Network Setup Webpage was Made by JO3RI check http://www.jo3ri.be/a
 #include <avr/wdt.h> //  ADD of Wtachdog to reset the board on submit
 #include <ArduinoJson.h>
 //#include <MemoryFree.h>
-int ver = 32 ;
+int ver = 37 ;
+//+------------------------------------------------------------------+
+//| oled
+//+------------------------------------------------------------------+
+#include <Wire.h>     // used to check if there is a OLED - for now just a I2C scanner - should be changed later
+#include <U8x8lib.h>
+#ifdef U8X8_HAVE_HW_SPI
+#include <SPI.h>
+#endif
+int show_serial = 0 ;
+int oled_active = 1 ;
+U8X8_SSD1306_128X64_NONAME_HW_I2C u8x8(/* reset=*/ U8X8_PIN_NONE);   // set Board Type
+// PIN 20 = SDA and 21 =SCL is used
+
+
 // ######## Custom Link Code ############
 int customLink; // Enable or disable - possibly over MQTT
 int overide; //= 0 ;
@@ -63,11 +83,11 @@ int analogTrig = 1024 ; // setup sothat the trigger can be changed in eeprom wit
 dht DHT;
 #define DHT11_PIN 5
   // Set Timer
-  unsigned long interval=30000; // the time we need to wait
+  unsigned long interval=300000; // the time we need to wait
   unsigned long previousMillis=0; // millis() returns an unsigned long.
   int temp;
   int hum;
-
+  int stop_publish ; // is used to make sure that the MQTT does not publush data when writing to the EEPROM
 
 // ######## RELAY CODE ############
 #include <Bounce2.h>
@@ -83,6 +103,9 @@ AsyncDelay delay_30s;
 // Very IMPORTANT THE MAINTOPIC MUST UNIQUE
 bool isMutuallyExclude = false;
 // These values will be used when the maintoic was not declred in the EEORom
+
+int mt_len ; // Declaire the main topic so that it can be used in MQTT to determine what command is recieved 
+/*
 const char* outTopic = "stat/atmegarelay/maintopic/state";
 const char* inTopic = "cmd/atmegarelay/maintopic/#";
 const char* outRelayTopic = "stat/atmegarelay/maintopic/POWER";
@@ -90,12 +113,21 @@ const char* outPinTopic = "stat/atmegarelay/maintopic/switch/";
 const char* LWT = "stat/atmegarelay/maintopic/LWT"; // Last Will and Testament
 const char* chTopic = "cmd/atmegarelay/maintopic/changetopic";
 // set the Maindefault topic when the Ketch runs for the first time --------------- NEDD TO DO
-
+*/
 // Delaire base topic for variable topics these are fixed and will not change
-const char* msSwitchOff = "{\"SWITCH\":\"OFF\"}" ;
-const char* msSwitchOn = "{\"SWITCH\":\"ON\"}" ;
-const char* msPowerOff = "{\"POWER\":\"OFF\"}" ;
-const char* msPowerOn = "{\"POWER\":\"ON\"}" ;
+//const char* msSwitchOff = "{\"SWITCH\":\"OFF\"}" ;
+//const char* msSwitchOn = "{\"SWITCH\":\"ON\"}" ;
+//const char* msSwitchOff = "OFF" ;
+//const char* msSwitchOn = "ON" ;
+const char* OffA = " : OFF" ;
+const char* OnA = " : ON" ;
+const char* OFF = "OFF" ;
+const char* ON = "ON" ;
+
+//const char* msPowerOff = "OFF" ;
+//const char* msPowerOn = "ON" ;
+//const char* msPowerOff = "{\"POWER\":\"OFF\"}" ;
+//const char* msPowerOn = "{\"POWER\":\"ON\"}" ;
 const char* cmd = "cmd/atmegarelay/";
 const char* stat = "stat/atmegarelay/";
 const char* cnhgeT = "/changetopic";
@@ -134,11 +166,11 @@ char outLinkRw[50] ="";
 //seting up the EthernetShield
 //change the defaults the match your own network
 byte mac[] = {0x30, 0x30, 0xAB, 0xF0, 0x67, 0xE2};
-byte ip[] = {192,168,8,2};
+byte ip[] = {192,168,8,99};
 byte subnet[] = {255,255,255,0};
 byte gateway[] = {192,168,8,1};
 byte dnsserver[] = {192,168,8,1};
-byte mqttserver[] = {192,168,8,3};
+byte mqttserver[] = {192,168,8,30};
 int address = 0;
 byte valuerom;
 char ipadr[100];
@@ -152,9 +184,9 @@ PubSubClient client(ethClient);
 long lastReconnectAttempt = 0;
 
 
-#define NUM_BUTTONS 35
-int buttPins[] = {0,1,2, 3, 6, 7, 8, 9,11,12,14, 15 ,16 ,17 ,18 ,19 , 20 ,21 ,46 ,47 ,48 ,49};
-const uint8_t BUTTON_PINS[NUM_BUTTONS] = {0,1,2, 3, 6, 7, 8, 9,11,12,14, 15 ,16 ,17 ,18 ,19 , 20 ,21 ,46 ,47 ,48 ,49 ,A0 ,A1 ,A2 ,A3 ,A4 ,A5 ,A6 ,A7 ,A8 ,A9 ,A10 ,A11,A15};//,68,69};
+#define NUM_BUTTONS 33
+//int buttPins[] = {0,1,2, 3, 6, 7, 8, 9,11,12,14, 15 ,16 ,17 ,18 ,19 , 20 ,21 ,46 ,47 ,48 ,49};
+const uint8_t BUTTON_PINS[NUM_BUTTONS] = {0,1,2,3, 6, 7, 8, 9,11,12,14, 15 ,16 ,17 ,18 ,19 ,46 ,47 ,48 ,49 ,A0 ,A1 ,A2 ,A3,A4,A5 ,A6 ,A7 ,A8 ,A9 ,A10,A11,A15};//,68,69};
 Bounce * buttons = new Bounce[NUM_BUTTONS];
 int ledState = LOW ;
 #define LED_PIN 13
@@ -356,7 +388,19 @@ analogSw = 0 ;
 update_sw (201);  // Get the switch info 
 showIPAddress();
 readLinks (); // Chech to see if liks is shown
-
+oledstart();
+/*
+int i2c = scan_i2c();
+Serial.println(i2c);
+if (i2c == 1){
+  oledstart();
+  Serial.println("Start OLED");
+}else{
+  oled_active = 0 ;
+}
+*/
+previousMillis = millis();
+stop_publish = 0 ;
 }
 
 
@@ -369,11 +413,14 @@ void loop(){
 
  if (!client.connected()) {
   long now = millis();
-  overide = 1 ;
-    if (now - lastReconnectAttempt > 10000) {
+  customLink = 1;
+  
+  //overide = 1 ;
+    if (now - lastReconnectAttempt > 5000) {
       lastReconnectAttempt = now;
       // Attempt to reconnect
       Serial.println("Conneting .....");
+      show_mqtt_status (0);
       toggleLED () ;
       if (reconnect()) {
         lastReconnectAttempt = 0;
