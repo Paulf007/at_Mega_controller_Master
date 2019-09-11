@@ -1,17 +1,25 @@
-void dht11 () {
-if (stop_publish == 0){
+void time_data () {
+if (stop_publish == 0){  
  unsigned long currentMillis = millis(); // grab current time
   // check if "interval" time has passed (1000 milliseconds)
  if ((unsigned long)(currentMillis - previousMillis) >= interval) {
-  
+ dht11 ();
+ publishStates(); // states of the relays will be sent every 5 min - 
+    }
+  } 
+}
+
+void dht11 () {
+ 
   int chk = DHT.read11(DHT11_PIN);
   temp = DHT.temperature;
   hum = DHT.humidity;
   show_tempR4 (temp,hum);// to OLED
-  //Serial.print("Temperature = ");
- // Serial.println(DHT.temperature);
- // Serial.print("Humidity = ");
- // Serial.println(DHT.humidity);
+  int anl = analog ();
+  //Serial.print("Analog = ");
+  //Serial.println(anl);
+ //Serial.print("Humidity = ");
+ //Serial.println(DHT.humidity);
  // Serial.println (hum);
        //convert ip Array into String
   ipmq = String (Ethernet.localIP()[0]);
@@ -29,7 +37,7 @@ if (stop_publish == 0){
           payload1 += "\"Ver\":"; payload1 += ver; payload1 += ",";
           payload1 += "\"ip\":\""; payload1 += ipmq.c_str();  payload1 += "\",";
           payload1 += "\"Overide\":"; payload1 += customLink; payload1 += ",";
-          payload1 += "\"AnlInfo\":"; payload1 += analogSw; payload1 += ",";
+          payload1 += "\"Anl\":"; payload1 += anl; payload1 += ",";
           payload1 += "\"DHT11\":{"; 
           payload1 += "\"Temp\":"; 
           payload1 += DHT.temperature; 
@@ -47,12 +55,12 @@ if (stop_publish == 0){
  //Serial.print (F("MQTT Data Sent"));
  // Serial.println(freeMemory());
   previousMillis = millis();
-  }
- }  
+//  }
+// }  
 }
 // Needs to be activated in setup
-void analog (){
-  if (analogSw == 1){
+int analog (){
+  //if (analogSw == 1){
      long sum = 0;
     for(int i=0; i<100; i++)
     {
@@ -60,7 +68,8 @@ void analog (){
     }
  
     sum = sum/100;
-    Serial.println(sum);
-    delay(10);
-  }
+    return sum ;
+    //Serial.println(sum);
+    //delay(10);
+//  }
 }

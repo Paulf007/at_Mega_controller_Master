@@ -36,6 +36,7 @@ The Embedded Network Setup Webpage was Made by JO3RI check http://www.jo3ri.be/a
 * 35 - add OLED to Board to report Switch Changes - for Conterle pannel Possible 
 * 36 -  add check to enable or disable OLED display so that if the oled is not active it will be discarded - not yet completed
 * 37 -  check if the MQTT command is for switching so that it could be ignored
+* 38 - report status of all relays every 5 min ( Could make this customisable)
 * 
 * 
 */
@@ -83,7 +84,7 @@ int analogTrig = 1024 ; // setup sothat the trigger can be changed in eeprom wit
 dht DHT;
 #define DHT11_PIN 5
   // Set Timer
-  unsigned long interval=300000; // the time we need to wait
+  unsigned long interval=30000; // the time we need to wait
   unsigned long previousMillis=0; // millis() returns an unsigned long.
   int temp;
   int hum;
@@ -98,8 +99,6 @@ int value = 0;
 AsyncDelay delay_400ms;
 AsyncDelay delay_30s;
 //MutuallyExclude the 'on' state between pairs of relays (for shutter to prevent up and down at the same time)
-//ask R1 to turn on while R2 = on -> turns off R2 first (and broadcasts 'domogik/in/relay/r2 0')
-//ask R2 to turn on while R1 = on -> turns off R1 first (and broadcasts 'domogik/in/relay/r1 0')
 // Very IMPORTANT THE MAINTOPIC MUST UNIQUE
 bool isMutuallyExclude = false;
 // These values will be used when the maintoic was not declred in the EEORom
@@ -115,10 +114,7 @@ const char* chTopic = "cmd/atmegarelay/maintopic/changetopic";
 // set the Maindefault topic when the Ketch runs for the first time --------------- NEDD TO DO
 */
 // Delaire base topic for variable topics these are fixed and will not change
-//const char* msSwitchOff = "{\"SWITCH\":\"OFF\"}" ;
-//const char* msSwitchOn = "{\"SWITCH\":\"ON\"}" ;
-//const char* msSwitchOff = "OFF" ;
-//const char* msSwitchOn = "ON" ;
+
 const char* OffA = " : OFF" ;
 const char* OnA = " : ON" ;
 const char* OFF = "OFF" ;
@@ -384,11 +380,12 @@ for (int i = 0; i < NUM_BUTTONS; i++) {
   //delay(1500);
  // lastReconnectAttempt = 0; 
 overide = 0 ;
-analogSw = 0 ;
+//analogSw = 1 ;
 update_sw (201);  // Get the switch info 
 showIPAddress();
 readLinks (); // Chech to see if liks is shown
 oledstart();
+dht11 (); // Shouw DHT 11 Senor data on startup
 /*
 int i2c = scan_i2c();
 Serial.println(i2c);
@@ -431,7 +428,7 @@ void loop(){
    // Publish web page
   }
   read_input_pins ();
-  analog () ; //Analog sensor can be placed on pin A12 to measure souns levels , could be used as a general alarm or klap sensor. 
-  dht11 () ;
+  //analog () ; //Analog sensor can be placed on pin A12 to measure souns levels , could be used as a general alarm or klap sensor. 
+  time_data () ;
   webpage ();
 }
