@@ -41,8 +41,8 @@ Only Switch 0 – 21 can be used to link to relays
 To link the Relay with the Switch and save it to the eeprom so that it is used in future -
 Use Topic : cmd/atmegarelay/%yourTpopic%/relayLink/100 -  where switchpin number + 100
 with the payload being the Relay Pin number so to link Switch 0 with Relay 2 the command will be:
-cmd/atmegarelay/mainhouse/relayLink/100 	 Payload : 2
+cmnd/mainhouse/relayLink/100 	 Payload : 2
 
 To Change the Auto Command from ON or OFF use the following command 
 
-cmd/atmegarelay/mainhouse/relayLink/201 	 Payload : 1 – ON or 2 – OFF 
+cmnd/mainhouse/relayLink/201 	 Payload : 1 – ON or 2 – OFF 
