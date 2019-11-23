@@ -1,7 +1,9 @@
 
+
+
 void  publishStates() {
   for (int thisPin = 0; thisPin < pinCount; thisPin++) {
-    char* state = relayStates[thisPin] == HIGH ? msPowerOff  : msPowerOn ;
+    char* state = relayStates[thisPin] == HIGH ? OFF  : ON ;
     publishRelayState(thisPin + 1, state);
   }
 }
@@ -13,12 +15,14 @@ void switchRelay(char* switchState, int pos) {
     //Turning off is safe to be done immediately
     digitalWrite(relayPins[pos], HIGH);
     relayStates[pos] = HIGH;
-    publishRelayState(pos +1,msPowerOff) ;
+    publishRelayState(pos +1,OFF) ;
+    show_statR3 (0,pos+1);
   } else if (switchState == '1') {
     //turning on is done in setStates
     digitalWrite(relayPins[pos], LOW);
-    publishRelayState(pos +1,msPowerOn) ;
-    publishRelayState ;
+    publishRelayState(pos +1,ON) ;
+    //publishRelayState ;
+    show_statR3 (1,pos+1);
     //
     relayStates[pos] = LOW;
   }

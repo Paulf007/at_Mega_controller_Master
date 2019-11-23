@@ -2,7 +2,7 @@
 // Read all the input pins and check if they are linked to any relays:
 void readLinks (){
 //int i;
-    for (int i = 0; i < 22; i++)      //declaring analog inputs
+    for (int i = 0; i < 32; i++)      //declaring analog inputs
   {
   //int s = buttPins[i];
   int GetAdd = ((i+100)*2)-97 ; 
@@ -39,8 +39,8 @@ void readLinks (){
 void int_link(int addr){
   int switchState;
   // first check if int link as active or not.
-  //Serial.print("Link in Mem Pin:");
-  //Serial.println(addr); 
+  Serial.print("Custom link is read from set is :");
+  Serial.println(customLink); 
   if (customLink == 1){
   int relay;
   int GetAdd = ((addr+100)*2)-97 ; // this is how the pin was saved in the memory so that two places was added for each link.  
@@ -71,14 +71,9 @@ void int_link(int addr){
 void update_sw (int val){
      int i ;
      EEPROM.get(201,i);
-     if (val == 201 && i == 1){
-      customLink = 1;
-      overide = 0 ;
-     }else{
-      customLink = 0;
-      overide = 1;      
-     }
-     //customLink = i;      
+     Serial.print("Custom Link is now: "); 
+     Serial.println(i);  
+     customLink = i;      
      Serial.print("Custom Link is: ");
      Serial.println(customLink);
      
