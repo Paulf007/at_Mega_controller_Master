@@ -10,13 +10,14 @@ void read_input_pins (){
     if ( buttons[i].fell() ) {
       char stopic[40];
       sprintf(stopic ,"%s%d",outPinTopicV,i);
-      client.publish(stopic, msSwitchOn);
+      client.publish(stopic, ON);
       int_link(i); // sent to c_sw_relay_link
-      connect_relay(i);
+      //connect_relay(i); // Hard Coded relay links is now disabled
+      show_statR2(1,i); // send to OLED
       
       // Set Overide ON or OFF
       if (i == 34){
-        overide = 1 ;
+        //overide = 1 ;
         customLink = 0; // Disable Custom Link so that the Standard Liks can Operate 
       }
       
@@ -24,10 +25,14 @@ void read_input_pins (){
     }else if ( buttons[i].rose() ){
       char stopic[40];
       sprintf(stopic ,"%s%d",outPinTopicV,i);
-      client.publish(stopic, msSwitchOff);
+      client.publish(stopic, OFF);
       int_link(i); // sent to c_sw_relay_link
-      connect_relay(i);
-   Serial.println(i);
+      //connect_relay(i);  // Hard Coded relay links is now disabled
+      show_statR2(0,i);// send to OLED
+
+
+      
+  // Serial.println(i);
    if (i == 34){
         overide = 0 ;
        
